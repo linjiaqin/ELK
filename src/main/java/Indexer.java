@@ -3,6 +3,7 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldType;
+import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
@@ -26,9 +27,12 @@ public class Indexer {
     //创建Lucene index writer
     public Indexer(String indexDir) throws IOException{
         Directory dir = FSDirectory.open(Paths.get(indexDir));
-        Analyzer analyzer = new StandardAnalyzer();
+        //Analyzer analyzer = new StandardAnalyzer();
+        Analyzer analyzer = new IKAnalyzer6x();
         config = new IndexWriterConfig(analyzer);
+        config.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
         writer = new IndexWriter(dir, config);
+
     }
     //关闭Index writer
     public void close() throws IOException{
@@ -77,12 +81,11 @@ public class Indexer {
         nameType.setIndexOptions(IndexOptions.DOCS);
         nameType.setStored(true);
         Document doc = new Document();
-        String content = readString2(f);
-        doc.add(new Field("contents", content,contentsType));
+        //String content = readString2(f);
+        doc.add(new TextField("contents", new FileReader(f)));
         doc.add(new Field("filename", f.getName(),nameType));
         doc.add(new Field("fullpath", f.getCanonicalPath(), nameType));
         System.out.println("indexing"+f.getCanonicalPath());
-        System.out.println(content);
         writer.addDocument(doc);
         writer.commit();
     }
